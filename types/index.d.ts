@@ -10,6 +10,7 @@ interface Feedback {
   strengths: string[];
   areasForImprovement: string[];
   finalAssessment: string;
+  expressionAnalysis?: ExpressionAnalysisResult;
   createdAt: string;
 }
 
@@ -29,6 +30,7 @@ interface CreateFeedbackParams {
   interviewId: string;
   userId: string;
   transcript: { role: string; content: string }[];
+  expressionAnalysis?: ExpressionAnalysisResult;
   feedbackId?: string;
 }
 
@@ -96,4 +98,28 @@ interface InterviewFormProps {
 
 interface TechIconProps {
   techStack: string[];
+}
+
+interface ExpressionSnapshot {
+  timestamp: string;
+  dominantExpression: string;
+  expressions: {
+    neutral: number;
+    happy: number;
+    sad: number;
+    angry: number;
+    fearful: number;
+    disgusted: number;
+    surprised: number;
+  };
+}
+
+interface ExpressionAnalysisResult {
+  confidenceScore: number;
+  nervousnessIndex: number;
+  engagementScore: number;
+  composureRating: number;
+  expressionBreakdown: Record<string, number>;
+  timeline: ExpressionSnapshot[];
+  insights: string[];
 }

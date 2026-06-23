@@ -9,6 +9,7 @@ import {
 } from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import ExpressionResults from "@/components/ExpressionResults";
 
 const Feedback = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -91,6 +92,10 @@ const Feedback = async ({ params }: RouteParams) => {
           ))}
         </ul>
       </div>
+
+      {feedback?.expressionAnalysis && (
+        <ExpressionResults results={feedback.expressionAnalysis} />
+      )}
 
       <div className="buttons">
         <Button className="btn-secondary flex-1">

@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
+import ExpressionMonitor from "./ExpressionMonitor";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -34,6 +35,8 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [expressionResults, setExpressionResults] = useState<ExpressionAnalysisResult | null | undefined>(undefined);
+  const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
 
   useEffect(() => {
     const onCallStart = () => {
@@ -87,13 +90,16 @@ const Agent = ({
       setLastMessage(messages[messages.length - 1].content);
     }
 
-    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-      console.log("handleGenerateFeedback");
+    const handleGenerateFeedback = async (messages: SavedMessage[], expAnalysis: ExpressionAnalysisResult | null) => {
+      if (isFeedbackSubmitting) return;
+      setIsFeedbackSubmitting(true);
+      console.log("handleGenerateFeedback", { expAnalysis });
 
       const { success, feedbackId: id } = await createFeedback({
         interviewId: interviewId!,
         userId: userId!,
         transcript: messages,
+        expressionAnalysis: expAnalysis || undefined,
         feedbackId,
       });
 
@@ -108,11 +114,12 @@ const Agent = ({
     if (callStatus === CallStatus.FINISHED) {
       if (type === "generate") {
         router.push("/");
-      } else {
-        handleGenerateFeedback(messages);
+      } else if (expressionResults !== undefined) {
+        // Wait until expression results are ready (either null or valid object)
+        handleGenerateFeedback(messages, expressionResults);
       }
     }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
+  }, [messages, callStatus, feedbackId, interviewId, router, type, userId, expressionResults, isFeedbackSubmitting]);
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
@@ -216,6 +223,16 @@ const Agent = ({
           </button>
         )}
       </div>
+
+      {type === "interview" && (
+        <ExpressionMonitor
+          isActive={callStatus === CallStatus.ACTIVE}
+          onResultsReady={(results) => {
+            console.log("Expression results ready", results);
+            setExpressionResults(results || null);
+          }}
+        />
+      )}
     </>
   );
 };

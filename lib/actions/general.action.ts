@@ -46,6 +46,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
       strengths: object.strengths,
       areasForImprovement: object.areasForImprovement,
       finalAssessment: object.finalAssessment,
+      expressionAnalysis: params.expressionAnalysis || null,
       createdAt: new Date().toISOString(),
     };
 
