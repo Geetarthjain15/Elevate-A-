@@ -59,6 +59,15 @@ export class FaceAnalyzer {
           }
         }
 
+        // Ensure video is ready before detecting
+        if (
+          this.videoElement.readyState < 2 || 
+          !this.videoElement.videoWidth || 
+          !this.videoElement.videoHeight
+        ) {
+          return;
+        }
+
         const detections = await faceapi
           .detectAllFaces(
             this.videoElement,

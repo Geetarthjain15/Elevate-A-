@@ -187,6 +187,8 @@ const Agent = ({
                 playsInline
                 className="w-full h-full object-cover transform -scale-x-100"
                 style={{ minHeight: "100%", display: "block" }}
+                width={640}
+                height={480}
               />
               {/* Name overlay at bottom */}
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent px-4 py-3">
