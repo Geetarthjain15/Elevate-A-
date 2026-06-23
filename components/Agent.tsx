@@ -147,11 +147,18 @@ const Agent = ({
           .join("\n");
       }
 
-      await vapi.start(interviewer, {
-        variableValues: {
-          questions: formattedQuestions,
-        },
-      });
+      // Deep clone the interviewer object to avoid mutating the constant
+      const dynamicInterviewer = JSON.parse(JSON.stringify(interviewer));
+      
+      // Manually inject the questions into the system prompt
+      if (dynamicInterviewer.model?.messages?.[0]?.content) {
+        dynamicInterviewer.model.messages[0].content = dynamicInterviewer.model.messages[0].content.replace(
+          "{{questions}}",
+          formattedQuestions
+        );
+      }
+
+      await vapi.start(dynamicInterviewer);
     }
   };
 
