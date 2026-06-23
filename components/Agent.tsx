@@ -178,18 +178,25 @@ const Agent = ({
 
         {/* User Profile Card */}
         <div className="card-border">
-          <div className="card-content">
-            {type === "interview" && callStatus === CallStatus.ACTIVE ? (
-              <div className="relative size-[120px] rounded-full overflow-hidden border-2 border-primary-200">
-                <video
-                  ref={userVideoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover transform -scale-x-100"
-                />
+          {type === "interview" && callStatus === CallStatus.ACTIVE ? (
+            <div className="relative w-full h-full rounded-2xl overflow-hidden dark-gradient min-h-full">
+              <video
+                ref={userVideoRef}
+                autoPlay
+                muted
+                playsInline
+                className="w-full h-full object-cover transform -scale-x-100"
+                style={{ minHeight: "100%", display: "block" }}
+              />
+              {/* Name overlay at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent px-4 py-3">
+                <h3 className="text-center text-white !mt-0 text-sm font-semibold tracking-wide">
+                  {userName}
+                </h3>
               </div>
-            ) : (
+            </div>
+          ) : (
+            <div className="card-content">
               <Image
                 src="/user-avatar.png"
                 alt="profile-image"
@@ -197,9 +204,9 @@ const Agent = ({
                 height={539}
                 className="rounded-full object-cover size-[120px]"
               />
-            )}
-            <h3>{userName}</h3>
-          </div>
+              <h3>{userName}</h3>
+            </div>
+          )}
         </div>
       </div>
 
