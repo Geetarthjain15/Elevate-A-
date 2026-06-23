@@ -5,7 +5,7 @@ import { FaceAnalyzer } from "@/lib/faceAnalysis";
 import { cn } from "@/lib/utils";
 
 interface ExpressionMonitorProps {
-  onResultsReady: (results: ExpressionAnalysisResult) => void;
+  onResultsReady: (results: ExpressionAnalysisResult | null) => void;
   isActive: boolean;
 }
 
@@ -20,6 +20,7 @@ export default function ExpressionMonitor({
 
   useEffect(() => {
     let stream: MediaStream | null = null;
+    const wasActive = isActive;
 
     const init = async () => {
       try {
@@ -46,10 +47,12 @@ export default function ExpressionMonitor({
       if (stream) {
         stream.getTracks().forEach((track) => track.stop());
       }
-      if (analyzerRef.current) {
-        const results = analyzerRef.current.stopAnalysis();
-        if (results) {
-          onResultsReady(results);
+      if (wasActive) {
+        if (analyzerRef.current) {
+          const results = analyzerRef.current.stopAnalysis();
+          onResultsReady(results || null);
+        } else {
+          onResultsReady(null);
         }
       }
     };

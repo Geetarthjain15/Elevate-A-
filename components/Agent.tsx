@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
@@ -94,6 +95,8 @@ const Agent = ({
       if (isFeedbackSubmitting) return;
       setIsFeedbackSubmitting(true);
       console.log("handleGenerateFeedback", { expAnalysis });
+      
+      const toastId = toast.loading("Analyzing your interview and generating feedback...");
 
       const { success, feedbackId: id } = await createFeedback({
         interviewId: interviewId!,
@@ -104,10 +107,12 @@ const Agent = ({
       });
 
       if (success && id) {
+        toast.success("Feedback generated successfully!", { id: toastId });
         router.push(`/interview/${interviewId}/feedback`);
       } else {
         console.log("Error saving feedback");
-        router.push("/");
+        toast.error("Failed to generate feedback. Please try again.", { id: toastId });
+        setIsFeedbackSubmitting(false);
       }
     };
 
@@ -203,7 +208,11 @@ const Agent = ({
 
       <div className="w-full flex justify-center">
         {callStatus !== "ACTIVE" ? (
-          <button className="relative btn-call" onClick={() => handleCall()}>
+          <button 
+            className="relative btn-call disabled:opacity-70 disabled:cursor-not-allowed" 
+            onClick={() => handleCall()}
+            disabled={isFeedbackSubmitting || callStatus === "CONNECTING"}
+          >
             <span
               className={cn(
                 "absolute animate-ping rounded-full opacity-75",
@@ -212,7 +221,9 @@ const Agent = ({
             />
 
             <span className="relative">
-              {callStatus === "INACTIVE" || callStatus === "FINISHED"
+              {isFeedbackSubmitting
+                ? "Generating..."
+                : callStatus === "INACTIVE" || callStatus === "FINISHED"
                 ? "Call"
                 : ". . ."}
             </span>
@@ -227,10 +238,10 @@ const Agent = ({
       {type === "interview" && (
         <ExpressionMonitor
           isActive={callStatus === CallStatus.ACTIVE}
-          onResultsReady={(results) => {
+          onResultsReady={useCallback((results: ExpressionAnalysisResult | null) => {
             console.log("Expression results ready", results);
             setExpressionResults(results || null);
-          }}
+          }, [])}
         />
       )}
     </>
