@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 interface ExpressionMonitorProps {
   onResultsReady: (results: ExpressionAnalysisResult | null) => void;
   isActive: boolean;
-  videoRef: React.RefObject<HTMLVideoElement>;
+  videoRef: React.RefObject<HTMLVideoElement | null>;
 }
 
 export default function ExpressionMonitor({

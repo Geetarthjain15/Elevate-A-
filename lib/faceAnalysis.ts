@@ -1,4 +1,3 @@
-import { ExpressionSnapshot, ExpressionAnalysisResult } from "@/types";
 import * as faceapi from "@vladmandic/face-api";
 
 export class FaceAnalyzer {

@@ -113,7 +113,7 @@ export async function getLatestInterviews(
     .orderBy("createdAt", "desc")
     .get();
 
-  const allInterviews = interviews.docs.map((doc) => ({
+  const allInterviews = interviews.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
@@ -135,14 +135,14 @@ export async function getInterviewsByUserId(
     .where("userId", "==", userId)
     .get();
 
-  const allInterviews = interviews.docs.map((doc) => ({
+  const allInterviews = interviews.docs.map((doc: any) => ({
     id: doc.id,
     ...doc.data(),
   })) as Interview[];
 
   return allInterviews.sort((a, b) => {
-    const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
-    const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+    const timeA = (a.createdAt as any)?.toMillis ? (a.createdAt as any).toMillis() : new Date(a.createdAt).getTime();
+    const timeB = (b.createdAt as any)?.toMillis ? (b.createdAt as any).toMillis() : new Date(b.createdAt).getTime();
     return timeB - timeA;
   });
 }
