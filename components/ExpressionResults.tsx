@@ -35,6 +35,8 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
     insights,
     facePresentPercentage,
     multipleFacePercentage,
+    deviceDetectedPercentage,
+    lookingAwayPercentage,
   } = results;
 
   // Prepare data for the Bar Chart
@@ -188,7 +190,7 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
 
           <div className="card card-border flex flex-col p-4 gap-3">
             <div className="flex items-center gap-2">
-              {(facePresentPercentage >= 85 && multipleFacePercentage <= 5) ? (
+              {(facePresentPercentage >= 85 && multipleFacePercentage <= 5 && deviceDetectedPercentage === 0 && lookingAwayPercentage <= 15) ? (
                 <ShieldCheck className="text-green-500" size={20} />
               ) : (
                 <ShieldAlert className="text-red-500" size={20} />
@@ -204,9 +206,21 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
+                <span className="text-light-400">Looking Away</span>
+                <span className={lookingAwayPercentage <= 15 ? "text-green-400" : "text-red-400"}>
+                  {lookingAwayPercentage}% Time
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
                 <span className="text-light-400">Multiple Faces</span>
                 <span className={multipleFacePercentage <= 5 ? "text-green-400" : "text-red-400"}>
                   {multipleFacePercentage}% Time
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-light-400">Device Detected</span>
+                <span className={deviceDetectedPercentage === 0 ? "text-green-400" : "text-red-400"}>
+                  {deviceDetectedPercentage}% Time
                 </span>
               </div>
             </div>

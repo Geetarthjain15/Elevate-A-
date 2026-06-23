@@ -1,4 +1,5 @@
-import * as faceapi from "face-api.js";
+import { ExpressionSnapshot, ExpressionAnalysisResult } from "@/types";
+import * as faceapi from "@vladmandic/face-api";
 
 export class FaceAnalyzer {
   private videoElement: HTMLVideoElement | null = null;
@@ -6,6 +7,7 @@ export class FaceAnalyzer {
   private intervalId: NodeJS.Timeout | null = null;
   public snapshots: ExpressionSnapshot[] = [];
   public modelsLoaded: boolean = false;
+  private cocoSsdModel: any = null;
 
   constructor() {
     this.snapshots = [];
@@ -14,12 +16,17 @@ export class FaceAnalyzer {
   async loadModels() {
     if (this.modelsLoaded) return;
     try {
+      await import("@tensorflow/tfjs");
+      const cocoSsd = await import("@tensorflow-models/coco-ssd");
+
       await Promise.all([
         faceapi.nets.tinyFaceDetector.loadFromUri("/models"),
         faceapi.nets.faceExpressionNet.loadFromUri("/models"),
+        faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+        cocoSsd.load().then((m: any) => { this.cocoSsdModel = m; }),
       ]);
       this.modelsLoaded = true;
-      console.log("Face analysis models loaded");
+      console.log("Face and Object analysis models loaded");
     } catch (error) {
       console.error("Failed to load face analysis models:", error);
     }
@@ -38,11 +45,26 @@ export class FaceAnalyzer {
       if (!this.isAnalyzing || !this.videoElement) return;
 
       try {
+        let deviceDetected = false;
+        let isLookingAway = false;
+
+        // Object Detection for Cell Phones
+        if (this.cocoSsdModel && this.videoElement) {
+          try {
+            const predictions = await this.cocoSsdModel.detect(this.videoElement);
+            const device = predictions.find((p: any) => p.class === "cell phone");
+            if (device) deviceDetected = true;
+          } catch (e) {
+            console.error("COCO-SSD error:", e);
+          }
+        }
+
         const detections = await faceapi
           .detectAllFaces(
             this.videoElement,
             new faceapi.TinyFaceDetectorOptions()
           )
+          .withFaceLandmarks()
           .withFaceExpressions();
 
         const faceCount = detections.length;
@@ -50,6 +72,32 @@ export class FaceAnalyzer {
         if (faceCount > 0) {
           const detection = detections[0]; // analyze the first/main face
           const expressions = detection.expressions;
+          const landmarks = detection.landmarks;
+
+          // Head Pose Estimation
+          const nose = landmarks.getNose();
+          const leftEye = landmarks.getLeftEye();
+          const rightEye = landmarks.getRightEye();
+
+          const leftEyeCenter = {
+            x: leftEye.reduce((sum, pt) => sum + pt.x, 0) / leftEye.length,
+            y: leftEye.reduce((sum, pt) => sum + pt.y, 0) / leftEye.length,
+          };
+
+          const rightEyeCenter = {
+            x: rightEye.reduce((sum, pt) => sum + pt.x, 0) / rightEye.length,
+            y: rightEye.reduce((sum, pt) => sum + pt.y, 0) / rightEye.length,
+          };
+
+          const noseTip = nose[3];
+
+          const distLeft = Math.sqrt(Math.pow(noseTip.x - leftEyeCenter.x, 2) + Math.pow(noseTip.y - leftEyeCenter.y, 2));
+          const distRight = Math.sqrt(Math.pow(noseTip.x - rightEyeCenter.x, 2) + Math.pow(noseTip.y - rightEyeCenter.y, 2));
+
+          const ratio = distLeft / distRight;
+          if (ratio > 2.5 || ratio < 0.4) {
+            isLookingAway = true;
+          }
           
           // Find dominant expression
           let dominantExpression = "neutral";
@@ -75,6 +123,8 @@ export class FaceAnalyzer {
               surprised: expressions.surprised,
             },
             faceCount,
+            deviceDetected,
+            isLookingAway,
           });
         } else {
           // No face detected
@@ -91,6 +141,8 @@ export class FaceAnalyzer {
               surprised: 0,
             },
             faceCount: 0,
+            deviceDetected,
+            isLookingAway: true,
           });
         }
       } catch (error) {
@@ -121,6 +173,8 @@ export class FaceAnalyzer {
     
     let noFaceCount = 0;
     let multipleFaceCount = 0;
+    let deviceDetectedCount = 0;
+    let lookingAwayCount = 0;
 
     let totalScore = {
         neutral: 0,
@@ -137,6 +191,8 @@ export class FaceAnalyzer {
     this.snapshots.forEach((snap) => {
       if (snap.faceCount === 0) noFaceCount++;
       if (snap.faceCount > 1) multipleFaceCount++;
+      if (snap.deviceDetected) deviceDetectedCount++;
+      if (snap.isLookingAway) lookingAwayCount++;
 
       if (snap.faceCount > 0) {
         faceDetectedSnapshots++;
@@ -169,6 +225,8 @@ export class FaceAnalyzer {
 
     const facePresentPercentage = Math.round(((totalSnapshots - noFaceCount) / totalSnapshots) * 100);
     const multipleFacePercentage = Math.round((multipleFaceCount / totalSnapshots) * 100);
+    const deviceDetectedPercentage = Math.round((deviceDetectedCount / totalSnapshots) * 100);
+    const lookingAwayPercentage = Math.round((lookingAwayCount / totalSnapshots) * 100);
 
     const engagementScore = facePresentPercentage;
     const composureRating = 100 - nervousnessIndex;
@@ -203,6 +261,14 @@ export class FaceAnalyzer {
       insights.push("Warning: Multiple faces were detected in your frame during the interview.");
     }
 
+    if (deviceDetectedPercentage > 0) {
+      insights.push("Warning: A cell phone or mobile device was detected during your interview.");
+    }
+
+    if (lookingAwayPercentage > 15) {
+      insights.push("Warning: You were frequently looking away from the screen.");
+    }
+
     return {
       confidenceScore,
       nervousnessIndex,
@@ -213,6 +279,8 @@ export class FaceAnalyzer {
       insights,
       facePresentPercentage,
       multipleFacePercentage,
+      deviceDetectedPercentage,
+      lookingAwayPercentage,
     };
   }
 }

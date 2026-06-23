@@ -113,6 +113,8 @@ interface ExpressionSnapshot {
     surprised: number;
   };
   faceCount: number;
+  deviceDetected: boolean;
+  isLookingAway: boolean;
 }
 
 interface ExpressionAnalysisResult {
@@ -125,4 +127,6 @@ interface ExpressionAnalysisResult {
   insights: string[];
   facePresentPercentage: number;
   multipleFacePercentage: number;
+  deviceDetectedPercentage: number;
+  lookingAwayPercentage: number;
 }
