@@ -42,10 +42,12 @@ const Agent = ({
 
   useEffect(() => {
     const onCallStart = () => {
+      console.log("✅ VAPI call started");
       setCallStatus(CallStatus.ACTIVE);
     };
 
     const onCallEnd = () => {
+      console.log("✅ VAPI call ended");
       setCallStatus(CallStatus.FINISHED);
     };
 
@@ -57,17 +59,17 @@ const Agent = ({
     };
 
     const onSpeechStart = () => {
-      console.log("speech start");
       setIsSpeaking(true);
     };
 
     const onSpeechEnd = () => {
-      console.log("speech end");
       setIsSpeaking(false);
     };
 
     const onError = (error: Error) => {
-      console.log("Error:", error);
+      console.error("❌ VAPI Error:", error);
+      toast.error(`Call failed: ${error?.message || "Unknown VAPI error"}. Please check your microphone and try again.`);
+      setCallStatus(CallStatus.INACTIVE);
     };
 
     vapi.on("call-start", onCallStart);
