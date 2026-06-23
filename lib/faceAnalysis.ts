@@ -38,14 +38,17 @@ export class FaceAnalyzer {
       if (!this.isAnalyzing || !this.videoElement) return;
 
       try {
-        const detection = await faceapi
-          .detectSingleFace(
+        const detections = await faceapi
+          .detectAllFaces(
             this.videoElement,
             new faceapi.TinyFaceDetectorOptions()
           )
           .withFaceExpressions();
 
-        if (detection) {
+        const faceCount = detections.length;
+
+        if (faceCount > 0) {
+          const detection = detections[0]; // analyze the first/main face
           const expressions = detection.expressions;
           
           // Find dominant expression
@@ -71,6 +74,23 @@ export class FaceAnalyzer {
               disgusted: expressions.disgusted,
               surprised: expressions.surprised,
             },
+            faceCount,
+          });
+        } else {
+          // No face detected
+          this.snapshots.push({
+            timestamp: new Date().toISOString(),
+            dominantExpression: "none",
+            expressions: {
+              neutral: 0,
+              happy: 0,
+              sad: 0,
+              angry: 0,
+              fearful: 0,
+              disgusted: 0,
+              surprised: 0,
+            },
+            faceCount: 0,
           });
         }
       } catch (error) {
@@ -99,6 +119,9 @@ export class FaceAnalyzer {
     let fearfulCount = 0;
     let surprisedCount = 0;
     
+    let noFaceCount = 0;
+    let multipleFaceCount = 0;
+
     let totalScore = {
         neutral: 0,
         happy: 0,
@@ -109,44 +132,51 @@ export class FaceAnalyzer {
         surprised: 0,
     }
 
-    this.snapshots.forEach((snap) => {
-      if (snap.dominantExpression === "happy") happyCount++;
-      if (snap.dominantExpression === "neutral") neutralCount++;
-      if (snap.dominantExpression === "fearful") fearfulCount++;
-      if (snap.dominantExpression === "surprised") surprisedCount++;
+    let faceDetectedSnapshots = 0;
 
-      totalScore.neutral += snap.expressions.neutral;
-      totalScore.happy += snap.expressions.happy;
-      totalScore.sad += snap.expressions.sad;
-      totalScore.angry += snap.expressions.angry;
-      totalScore.fearful += snap.expressions.fearful;
-      totalScore.disgusted += snap.expressions.disgusted;
-      totalScore.surprised += snap.expressions.surprised;
+    this.snapshots.forEach((snap) => {
+      if (snap.faceCount === 0) noFaceCount++;
+      if (snap.faceCount > 1) multipleFaceCount++;
+
+      if (snap.faceCount > 0) {
+        faceDetectedSnapshots++;
+        if (snap.dominantExpression === "happy") happyCount++;
+        if (snap.dominantExpression === "neutral") neutralCount++;
+        if (snap.dominantExpression === "fearful") fearfulCount++;
+        if (snap.dominantExpression === "surprised") surprisedCount++;
+
+        totalScore.neutral += snap.expressions.neutral;
+        totalScore.happy += snap.expressions.happy;
+        totalScore.sad += snap.expressions.sad;
+        totalScore.angry += snap.expressions.angry;
+        totalScore.fearful += snap.expressions.fearful;
+        totalScore.disgusted += snap.expressions.disgusted;
+        totalScore.surprised += snap.expressions.surprised;
+      }
     });
 
     const totalSnapshots = this.snapshots.length;
 
-    // Confidence: % of time happy or neutral
-    const confidenceScore = Math.round(
-      ((happyCount + neutralCount) / totalSnapshots) * 100
-    );
+    // Confidence: % of time happy or neutral (when face is present)
+    const confidenceScore = faceDetectedSnapshots > 0 ? Math.round(
+      ((happyCount + neutralCount) / faceDetectedSnapshots) * 100
+    ) : 0;
 
-    // Nervousness: % of time fearful or surprised
-    const nervousnessIndex = Math.round(
-      ((fearfulCount + surprisedCount) / totalSnapshots) * 100
-    );
+    // Nervousness: % of time fearful or surprised (when face is present)
+    const nervousnessIndex = faceDetectedSnapshots > 0 ? Math.round(
+      ((fearfulCount + surprisedCount) / faceDetectedSnapshots) * 100
+    ) : 0;
 
-    // Engagement: simply having snapshots (face detected)
-    // Could be refined if we tracked face landmarks, but simple for now
-    const engagementScore = 100; // Placeholder
+    const facePresentPercentage = Math.round(((totalSnapshots - noFaceCount) / totalSnapshots) * 100);
+    const multipleFacePercentage = Math.round((multipleFaceCount / totalSnapshots) * 100);
 
-    // Composure: inverse of nervousness
+    const engagementScore = facePresentPercentage;
     const composureRating = 100 - nervousnessIndex;
 
     // Expression Breakdown
     const expressionBreakdown: Record<string, number> = {};
     Object.entries(totalScore).forEach(([exp, total]) => {
-      expressionBreakdown[exp] = Math.round((total / totalSnapshots) * 100);
+      expressionBreakdown[exp] = faceDetectedSnapshots > 0 ? Math.round((total / faceDetectedSnapshots) * 100) : 0;
     });
 
     // Generate Insights
@@ -165,6 +195,14 @@ export class FaceAnalyzer {
       );
     }
 
+    if (facePresentPercentage < 85) {
+      insights.push("Warning: Your face was frequently out of frame or not detected.");
+    }
+
+    if (multipleFacePercentage > 5) {
+      insights.push("Warning: Multiple faces were detected in your frame during the interview.");
+    }
+
     return {
       confidenceScore,
       nervousnessIndex,
@@ -173,6 +211,8 @@ export class FaceAnalyzer {
       expressionBreakdown,
       timeline: this.snapshots,
       insights,
+      facePresentPercentage,
+      multipleFacePercentage,
     };
   }
 }

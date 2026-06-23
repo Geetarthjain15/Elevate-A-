@@ -112,6 +112,7 @@ interface ExpressionSnapshot {
     disgusted: number;
     surprised: number;
   };
+  faceCount: number;
 }
 
 interface ExpressionAnalysisResult {
@@ -122,4 +123,6 @@ interface ExpressionAnalysisResult {
   expressionBreakdown: Record<string, number>;
   timeline: ExpressionSnapshot[];
   insights: string[];
+  facePresentPercentage: number;
+  multipleFacePercentage: number;
 }

@@ -7,13 +7,14 @@ import { cn } from "@/lib/utils";
 interface ExpressionMonitorProps {
   onResultsReady: (results: ExpressionAnalysisResult | null) => void;
   isActive: boolean;
+  videoRef: React.RefObject<HTMLVideoElement>;
 }
 
 export default function ExpressionMonitor({
   onResultsReady,
   isActive,
+  videoRef,
 }: ExpressionMonitorProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
   const analyzerRef = useRef<FaceAnalyzer | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +70,6 @@ export default function ExpressionMonitor({
 
   return (
     <div className="fixed bottom-4 left-4 z-50 flex items-center gap-3 rounded-full bg-dark-200/80 backdrop-blur-md px-4 py-2 border border-light-800/30 shadow-lg">
-      <video
-        ref={videoRef}
-        autoPlay
-        muted
-        playsInline
-        className="hidden" // Hidden video feed, only used for analysis
-      />
-      
       {isInitializing ? (
         <>
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 animate-pulse" />

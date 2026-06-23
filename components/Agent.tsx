@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -38,6 +38,7 @@ const Agent = ({
   const [lastMessage, setLastMessage] = useState<string>("");
   const [expressionResults, setExpressionResults] = useState<ExpressionAnalysisResult | null | undefined>(undefined);
   const [isFeedbackSubmitting, setIsFeedbackSubmitting] = useState(false);
+  const userVideoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const onCallStart = () => {
@@ -178,13 +179,25 @@ const Agent = ({
         {/* User Profile Card */}
         <div className="card-border">
           <div className="card-content">
-            <Image
-              src="/user-avatar.png"
-              alt="profile-image"
-              width={539}
-              height={539}
-              className="rounded-full object-cover size-[120px]"
-            />
+            {type === "interview" && callStatus === CallStatus.ACTIVE ? (
+              <div className="relative size-[120px] rounded-full overflow-hidden border-2 border-primary-200">
+                <video
+                  ref={userVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover transform -scale-x-100"
+                />
+              </div>
+            ) : (
+              <Image
+                src="/user-avatar.png"
+                alt="profile-image"
+                width={539}
+                height={539}
+                className="rounded-full object-cover size-[120px]"
+              />
+            )}
             <h3>{userName}</h3>
           </div>
         </div>
@@ -238,6 +251,7 @@ const Agent = ({
       {type === "interview" && (
         <ExpressionMonitor
           isActive={callStatus === CallStatus.ACTIVE}
+          videoRef={userVideoRef}
           onResultsReady={useCallback((results: ExpressionAnalysisResult | null) => {
             console.log("Expression results ready", results);
             setExpressionResults(results || null);

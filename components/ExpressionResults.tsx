@@ -10,7 +10,7 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { Smile, Frown, Meh, Activity, Zap } from "lucide-react";
+import { Smile, Frown, Meh, Activity, Zap, ShieldAlert, ShieldCheck } from "lucide-react";
 
 ChartJS.register(
   CategoryScale,
@@ -33,6 +33,8 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
     nervousnessIndex,
     expressionBreakdown,
     insights,
+    facePresentPercentage,
+    multipleFacePercentage,
   } = results;
 
   // Prepare data for the Bar Chart
@@ -182,6 +184,32 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
               </div>
             </div>
             <span className="text-xl font-bold text-light-100">{nervousnessIndex}%</span>
+          </div>
+
+          <div className="card card-border flex flex-col p-4 gap-3">
+            <div className="flex items-center gap-2">
+              {(facePresentPercentage >= 85 && multipleFacePercentage <= 5) ? (
+                <ShieldCheck className="text-green-500" size={20} />
+              ) : (
+                <ShieldAlert className="text-red-500" size={20} />
+              )}
+              <h3 className="text-sm font-medium text-light-100">Integrity Checks</h3>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-light-400">Face Present</span>
+                <span className={facePresentPercentage >= 85 ? "text-green-400" : "text-red-400"}>
+                  {facePresentPercentage}% Time
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-light-400">Multiple Faces</span>
+                <span className={multipleFacePercentage <= 5 ? "text-green-400" : "text-red-400"}>
+                  {multipleFacePercentage}% Time
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
