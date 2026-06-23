@@ -230,6 +230,7 @@ export class FaceAnalyzer {
 
     const engagementScore = facePresentPercentage;
     const composureRating = 100 - nervousnessIndex;
+    const eyeContactScore = Math.max(0, 100 - lookingAwayPercentage);
 
     // Expression Breakdown
     const expressionBreakdown: Record<string, number> = {};
@@ -274,6 +275,7 @@ export class FaceAnalyzer {
       nervousnessIndex,
       engagementScore,
       composureRating,
+      eyeContactScore,
       expressionBreakdown,
       timeline: this.snapshots,
       insights,

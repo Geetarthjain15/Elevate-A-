@@ -122,6 +122,7 @@ interface ExpressionAnalysisResult {
   nervousnessIndex: number;
   engagementScore: number;
   composureRating: number;
+  eyeContactScore: number;
   expressionBreakdown: Record<string, number>;
   timeline: ExpressionSnapshot[];
   insights: string[];
