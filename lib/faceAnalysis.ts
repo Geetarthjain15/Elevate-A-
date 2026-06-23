@@ -16,7 +16,8 @@ export class FaceAnalyzer {
   async loadModels() {
     if (this.modelsLoaded) return;
     try {
-      await import("@tensorflow/tfjs");
+      const tf = await import("@tensorflow/tfjs");
+      await tf.ready();
       const cocoSsd = await import("@tensorflow-models/coco-ssd");
 
       await Promise.all([
