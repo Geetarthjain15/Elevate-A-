@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FaceAnalyzer } from "@/lib/faceAnalysis";
 import { cn } from "@/lib/utils";
 
 interface ExpressionMonitorProps {
@@ -15,7 +14,7 @@ export default function ExpressionMonitor({
   isActive,
   videoRef,
 }: ExpressionMonitorProps) {
-  const analyzerRef = useRef<FaceAnalyzer | null>(null);
+  const analyzerRef = useRef<any>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -25,6 +24,10 @@ export default function ExpressionMonitor({
 
     const init = async () => {
       try {
+        // Dynamically import FaceAnalyzer ONLY on the client side
+        // This prevents @vladmandic/face-api from being evaluated on the server (SSR),
+        // which crashes with "TextEncoder is not a constructor"
+        const { FaceAnalyzer } = await import("@/lib/faceAnalysis");
         analyzerRef.current = new FaceAnalyzer();
         await analyzerRef.current.loadModels();
 
@@ -62,7 +65,7 @@ export default function ExpressionMonitor({
   // Handle starting/stopping analysis based on isActive
   useEffect(() => {
     if (!isInitializing && !error && isActive && analyzerRef.current && videoRef.current) {
-        analyzerRef.current.startAnalysis(videoRef.current);
+      analyzerRef.current.startAnalysis(videoRef.current);
     }
   }, [isInitializing, error, isActive]);
 
@@ -77,7 +80,7 @@ export default function ExpressionMonitor({
         </>
       ) : error ? (
         <>
-           <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
           <span className="text-xs font-medium text-light-100">{error}</span>
         </>
       ) : (
