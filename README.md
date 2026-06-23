@@ -9,6 +9,9 @@
     <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
     <img src="https://img.shields.io/badge/Gemini_AI-4285F4?style=for-the-badge&logo=google&logoColor=white" alt="Gemini" />
   </div>
+
+  <br />
+  <h3>🌐 <a href="https://elevate-ai-geetarth.vercel.app">Live Demo</a></h3>
 </div>
 
 <br />
