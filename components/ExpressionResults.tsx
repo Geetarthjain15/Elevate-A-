@@ -123,16 +123,16 @@ export default function ExpressionResults({ results }: ExpressionResultsProps) {
   if (!results) return null;
 
   const {
-    confidenceScore,
-    nervousnessIndex,
-    engagementScore,
-    composureRating,
-    eyeContactScore,
-    insights,
-    facePresentPercentage,
-    multipleFacePercentage,
-    deviceDetectedPercentage,
-    lookingAwayPercentage,
+    confidenceScore = 0,
+    nervousnessIndex = 0,
+    engagementScore = 0,
+    composureRating = 0,
+    eyeContactScore = 0,
+    insights = [],
+    facePresentPercentage = 0,
+    multipleFacePercentage = 0,
+    deviceDetectedPercentage = 0,
+    lookingAwayPercentage = 0,
   } = results;
 
   // ── Radar chart: Performance metrics ──
